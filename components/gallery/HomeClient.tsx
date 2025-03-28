@@ -10,6 +10,7 @@ import Logo from "./Icons/Logo";
 
 export default function HomeClient({ images }: { images: ImageProps[] }) {
   const [lastViewedPhoto, setLastViewedPhoto] = useLastViewedPhoto();
+  
 
   const lastViewedPhotoRef = useRef<HTMLAnchorElement>(null);
 
