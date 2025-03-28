@@ -6,9 +6,8 @@ const nextConfig: NextConfig = {
       {
         protocol: "https",
         hostname: "res.cloudinary.com",
-        port: "",
-        pathname: "/my-account/**",
-        search: "",
+        // Pozwól na wszystkie ścieżki w obrębie Twojego konta Cloudinary
+        pathname: "/jasberry/**", // Zmień 'jasberry' na nazwę Twojego chmur
       },
     ],
   },
