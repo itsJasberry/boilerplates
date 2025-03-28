@@ -6,11 +6,14 @@ import useKeypress from "react-use-keypress";
 import type { ImageProps } from "@/lib/gallery/types";
 import { useLastViewedPhoto } from "@/lib/gallery/useLastViewedPhoto";
 import SharedModal from "./SharedModal";
+import { useRef, useState } from "react";
+import { Dialog } from "@headlessui/react";
+import { motion } from "motion/react";
 
 export default function Carousel({
   index,
-  currentPhoto,
   images,
+  currentPhoto,
 }: {
   index: number;
   currentPhoto: ImageProps;
@@ -18,24 +21,59 @@ export default function Carousel({
 }) {
   const router = useRouter();
   const [, setLastViewedPhoto] = useLastViewedPhoto();
+  const [direction, setDirection] = useState(0);
+  const overlayRef = useRef<HTMLDivElement | null>(null);
 
-  function closeModal() {
-    setLastViewedPhoto(currentPhoto.id);
-    router.push("/");
-  }
-
-  function changePhotoId(newVal: number) {
-    return newVal;
-  }
+  const [curIndex, setCurIndex] = useState(index);
 
   useKeypress("Escape", () => {
     closeModal();
   });
 
+  useKeypress("ArrowRight", () => {
+    if (index + 1 < images.length) {
+      changePhotoId(index + 1);
+    }
+  });
+
+  useKeypress("ArrowLeft", () => {
+    if (index > 0) {
+      changePhotoId(index - 1);
+    }
+  });
+
+  const closeModal = () => {
+    setLastViewedPhoto(currentPhoto.id);
+    router.push("/");
+  };
+
+  function changePhotoId(newVal: number) {
+    if (newVal > index) {
+      setDirection(1);
+    } else {
+      setDirection(-1);
+    }
+
+    setCurIndex(newVal);
+    router.push(`/p/${newVal}`);
+  }
+
+  console.log("direction", direction)
+
   return (
-    <div className="fixed inset-0 flex items-center justify-center">
-      <button
-        className="absolute inset-0 z-30 cursor-default bg-black backdrop-blur-2xl"
+    <Dialog
+      static
+      open={true}
+      onClose={closeModal}
+      initialFocus={overlayRef}
+      className="fixed inset-0 z-10 flex items-center justify-center"
+    >
+      <motion.div
+        ref={overlayRef}
+        key="backdrop"
+        className="fixed inset-0 z-30 bg-black/70 backdrop-blur-2xl"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
         onClick={closeModal}
       >
         <Image
@@ -45,15 +83,15 @@ export default function Carousel({
           fill
           priority={true}
         />
-      </button>
+      </motion.div>
       <SharedModal
-        index={index}
-        images={images}
+        index={curIndex}
         changePhotoId={changePhotoId}
-        currentPhoto={currentPhoto}
+        direction={direction}
+        images={images}
         closeModal={closeModal}
         navigation={true}
       />
-    </div>
+    </Dialog>
   );
 }

@@ -46,6 +46,10 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --breakpoint-narrow: "(max-aspect-ratio: 3 / 2)";
+  --breakpoint-wide: "(min-aspect-ratio: 3 / 2)";
+  --breakpoint-taller-than-854: "(min-height: 854px)";
+  --shadow-highlight: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
 }
 
 :root {

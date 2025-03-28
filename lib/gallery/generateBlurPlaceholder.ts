@@ -1,26 +1,30 @@
 import { getPlaiceholder } from "plaiceholder";
 import type { ImageProps } from "./types";
+import { unstable_cache as cache } from 'next/cache';
 
-const cache = new Map<ImageProps, string>();
+// Tworzymy funkcję generującą unikalny klucz cache dla każdego obrazu
+// function getCacheKey(image: ImageProps): string {
+//   return `blur-${image.public_id}-${image.format}`;
+// }
 
-export default async function getBase64ImageUrl(image: ImageProps): Promise<string> {
-  let url = cache.get(image);
-  if (url) {
-    return url;
-  }
+// Wykorzystujemy cache z Next.js zamiast własnej implementacji Map
+const getBase64ImageUrl = cache(async function(image: ImageProps): Promise<string> {
+  const imageUrl = `https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/f_jpg,w_8,q_70/${image.public_id}.${image.format}`;
   
-  const response = await fetch(
-    `https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/f_jpg,w_8,q_70/${image.public_id}.${image.format}`
-  );
+  // Użycie fetch z opcją cache dla dodatkowej warstwy cachowania
+  const response = await fetch(imageUrl, {
+    cache: 'force-cache' // Używamy silnego cachowania dla miniatur
+  });
 
   if (!response.ok) {
     throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
   }
-  
+
   const buffer = await response.arrayBuffer();
   const { base64 } = await getPlaiceholder(Buffer.from(buffer));
 
-  url = `data:image/jpeg;base64,${base64}`;
-  cache.set(image, url);
-  return url;
-}
+  // Ensure the resulting string is a proper data URI
+  return base64.startsWith("data:") ? base64 : `data:image/jpeg;base64,${base64}`;
+});
+
+export default getBase64ImageUrl;

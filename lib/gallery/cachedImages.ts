@@ -1,25 +1,23 @@
 import cloudinary from "./cloudinary";
+import { unstable_cache as cache } from "next/cache";
 
-type CloudinarySearchResult = {
-  resources: Array<{
-    public_id: string;
-    [key: string]: unknown;
-  }>;
-  [key: string]: unknown;
-};
-
-let cachedResults: CloudinarySearchResult | undefined;
-
-export default async function getResults(): Promise<CloudinarySearchResult> {
-  if (!cachedResults) {
-    const fetchedResults: CloudinarySearchResult = await cloudinary.v2.search
+// Funkcja z pełną konfiguracją cachowania
+export default cache(
+  async function getResults() {
+    const fetchedResults = await cloudinary.v2.search
       .expression(`folder:${process.env.CLOUDINARY_FOLDER || ""}/*`)
       .sort_by("public_id", "desc")
       .max_results(400)
       .execute();
 
-    cachedResults = fetchedResults;
+    return fetchedResults;
+  },
+  // Unikalny klucz cache dla tej operacji
+  ["cloudinary-gallery-results"],
+  {
+    // Czas revalidacji w sekundach - np. 1 godzina (lub false dla nieskończonego cache)
+    revalidate: 3600,
+    // Tagi cache do selektywnej rewalidacji
+    tags: ["gallery", "cloudinary-images"],
   }
-
-  return cachedResults;
-}
+);

@@ -1,6 +1,8 @@
+"use client";
+
 import { Dialog } from "@headlessui/react";
-import { motion } from "framer-motion";
-import { useRouter } from "next/router";
+import { motion } from "motion/react";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { useRef, useState } from "react";
 import useKeypress from "react-use-keypress";
 import type { ImageProps } from "@/lib/gallery/types";
@@ -15,34 +17,33 @@ export default function Modal({
 }) {
   const overlayRef = useRef<HTMLDivElement | null>(null);
   const router = useRouter();
+  const params = useParams();
+  const searchParams = useSearchParams();
 
-  const { photoId } = router.query;
+  const photoId = (params.photoId as string) || searchParams.get("photoId");
   const index = Number(photoId);
 
   const [direction, setDirection] = useState(0);
   const [curIndex, setCurIndex] = useState(index);
 
+  console.log("reender")
+
   function handleClose() {
-    router.push("/", undefined, { shallow: true });
+    router.push("/");
     if (onClose) {
       onClose();
     }
   }
 
-  function changePhotoId(newVal: number) {
+  function changePhotoId(newVal: number) {    
     if (newVal > index) {
       setDirection(1);
     } else {
       setDirection(-1);
     }
+    
     setCurIndex(newVal);
-    router.push(
-      {
-        query: { photoId: newVal },
-      },
-      `/p/${newVal}`,
-      { shallow: true },
-    );
+    router.push(`/p/${newVal}`);
   }
 
   useKeypress("ArrowRight", () => {
@@ -61,7 +62,10 @@ export default function Modal({
     <Dialog
       static
       open={true}
-      onClose={handleClose}
+      onClose={() => {
+        console.log('Dialog overlay clicked');
+        handleClose();
+      }}
       initialFocus={overlayRef}
       className="fixed inset-0 z-10 flex items-center justify-center"
     >
@@ -74,9 +78,9 @@ export default function Modal({
       />
       <SharedModal
         index={curIndex}
+        changePhotoId={changePhotoId}
         direction={direction}
         images={images}
-        changePhotoId={changePhotoId}
         closeModal={handleClose}
         navigation={true}
       />

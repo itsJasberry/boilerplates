@@ -2,41 +2,29 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { useEffect, useRef } from "react";
-import Bridge from "./Icons/Bridge";
-import Logo from "./Icons/Logo";
-import Modal from "./Modal";
 import type { ImageProps } from "@/lib/gallery/types";
 import { useLastViewedPhoto } from "@/lib/gallery/useLastViewedPhoto";
+import Bridge from "./Icons/Bridge";
+import Logo from "./Icons/Logo";
 
 export default function HomeClient({ images }: { images: ImageProps[] }) {
-  const searchParams = useSearchParams();
-  const photoId = searchParams.get("photoId");
   const [lastViewedPhoto, setLastViewedPhoto] = useLastViewedPhoto();
 
   const lastViewedPhotoRef = useRef<HTMLAnchorElement>(null);
 
   useEffect(() => {
-    if (lastViewedPhoto && !photoId) {
+    if (lastViewedPhoto) {
       lastViewedPhotoRef.current?.scrollIntoView({ block: "center" });
       setLastViewedPhoto(null);
     }
-  }, [photoId, lastViewedPhoto, setLastViewedPhoto]);
+  }, [lastViewedPhoto, setLastViewedPhoto]);
 
   return (
     <>
       <main className="mx-auto max-w-[1960px] p-4">
-        {photoId && (
-          <Modal
-            images={images}
-            onClose={() => {
-              setLastViewedPhoto(photoId ? Number(photoId) : null);
-            }}
-          />
-        )}
         <div className="columns-1 gap-4 sm:columns-2 xl:columns-3 2xl:columns-4">
-          <div className="after:content relative mb-5 flex h-[629px] flex-col items-center justify-end gap-4 overflow-hidden rounded-lg bg-white/10 px-6 pb-16 pt-64 text-center text-white shadow-highlight after:pointer-events-none after:absolute after:inset-0 after:rounded-lg after:shadow-highlight lg:pt-0">
+          <div className="relative mb-5 flex h-[629px] flex-col items-center justify-end gap-4 overflow-hidden rounded-lg bg-black/70 px-6 pb-16 pt-64 text-center  shadow-highlight after:pointer-events-none after:absolute after:inset-0 after:rounded-lg after:shadow-highlight lg:pt-0">
             <div className="absolute inset-0 flex items-center justify-center opacity-20">
               <span className="flex max-h-full max-w-full items-center justify-center">
                 <Bridge />
@@ -51,19 +39,17 @@ export default function HomeClient({ images }: { images: ImageProps[] }) {
               Our incredible Next.js community got together in San Francisco for
               our first ever in-person conference!
             </p>
-            <a
+            <Link
               className="pointer z-10 mt-6 rounded-lg border border-white bg-white px-3 py-2 text-sm font-semibold text-black transition hover:bg-white/10 hover:text-white md:mt-4"
-              href="https://vercel.com/new/clone?repository-url=https://github.com/vercel/next.js/tree/canary/examples/with-cloudinary&project-name=nextjs-image-gallery&repository-name=with-cloudinary&env=NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,CLOUDINARY_API_KEY,CLOUDINARY_API_SECRET,CLOUDINARY_FOLDER&envDescription=API%20Keys%20from%20Cloudinary%20needed%20to%20run%20this%20application"
-              target="_blank"
-              rel="noreferrer"
+              href="/"
             >
               Clone and Deploy
-            </a>
+            </Link>
           </div>
           {images.map(({ id, public_id, format, blurDataUrl }) => (
             <Link
               key={id}
-              href={`/?photoId=${id}`}
+              href={`/p/${id}`}
               as={`/p/${id}`}
               ref={
                 id === Number(lastViewedPhoto) ? lastViewedPhotoRef : undefined
@@ -89,36 +75,6 @@ export default function HomeClient({ images }: { images: ImageProps[] }) {
           ))}
         </div>
       </main>
-      <footer className="p-6 text-center text-white/80 sm:p-12">
-        Thank you to{" "}
-        <a
-          href="https://edelsonphotography.com/"
-          target="_blank"
-          className="font-semibold hover:text-white"
-          rel="noreferrer"
-        >
-          Josh Edelson
-        </a>
-        ,{" "}
-        <a
-          href="https://www.newrevmedia.com/"
-          target="_blank"
-          className="font-semibold hover:text-white"
-          rel="noreferrer"
-        >
-          Jenny Morgan
-        </a>
-        , and{" "}
-        <a
-          href="https://www.garysextonphotography.com/"
-          target="_blank"
-          className="font-semibold hover:text-white"
-          rel="noreferrer"
-        >
-          Gary Sexton
-        </a>{" "}
-        for the pictures.
-      </footer>
     </>
   );
 }

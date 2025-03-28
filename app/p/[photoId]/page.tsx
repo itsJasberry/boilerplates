@@ -1,24 +1,21 @@
 import type { Metadata } from "next";
 import Carousel from "@/components/gallery/Carousel";
 import getResults from "@/lib/gallery/cachedImages";
-import cloudinary from "@/lib/gallery/cloudinary";
 import getBase64ImageUrl from "@/lib/gallery/generateBlurPlaceholder";
 import type { ImageProps } from "@/lib/gallery/types";
+
+export const dynamicParams = true;
 
 type PageProps = {
   params: Promise<{ photoId: string }>;
 };
 
-export async function generateStaticParams() {
+export const generateStaticParams = async () => {
   // Pobieramy listę zasobów z Cloudinary
-  const results = await cloudinary.v2.search
-    .expression(`folder:${process.env.CLOUDINARY_FOLDER}`)
-    .sort_by("public_id", "desc")
-    .max_results(400)
-    .execute();
+  const results = await getResults();
 
   // Generujemy tablicę parametrów { photoId: string }
-  const paramsArray = results.resources.map((_, i: number) => ({
+  const paramsArray = results.resources.map((_: undefined, i: number) => ({
     photoId: i.toString(),
   }));
 
@@ -68,7 +65,6 @@ export async function generateMetadata({
 }
 
 export default async function Page({ params }: PageProps) {
-  // Pobieramy wszystkie wyniki
   const results = await getResults();
   const { photoId } = await params;
 
@@ -90,16 +86,10 @@ export default async function Page({ params }: PageProps) {
   if (!currentPhoto) {
     return <div>Photo not found</div>;
   }
-
-  // Generujemy blurDataUrl
   currentPhoto.blurDataUrl = await getBase64ImageUrl(currentPhoto);
-
-  // Możesz utworzyć dodatkowy URL do meta danych, jeżeli to konieczne:
-  // const currentPhotoUrl = `https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/c_scale,w_2560/${currentPhoto.public_id}.${currentPhoto.format};`
-
   return (
     <main className="mx-auto max-w-[1200px] p-4">
-      <Carousel currentPhoto={currentPhoto} images={reducedResults} index={Number(photoId)} />
+      <Carousel currentPhoto={currentPhoto} index={Number(photoId)} images={reducedResults} />
     </main>
   );
 }
